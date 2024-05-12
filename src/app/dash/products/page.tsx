@@ -1,3 +1,4 @@
+"use client";
 import { IconButton } from "@/app/components/IconButton";
 import { Table } from "@/app/components/table/table";
 import { TableCell } from "@/app/components/table/table-cell";
@@ -7,8 +8,33 @@ import { ChevronLeftIcon, ChevronRightIcon, ChevronsLeftIcon, ChevronsRightIcon,
 
 import { products } from "@/app/data/products";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { api } from "@/app/lib/api";
+
+interface Product {
+  product_id: string;
+  name: string;
+  price_in_cents: number
+}
 
 export default function DashProductsPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    async function fetchData() {
+      const response = await api.get<Product[]>("/products");
+      console.log(response.data);
+      const fetchedProducts = response.data.map((row) => ({
+        product_id: row.product_id,
+        name: row.name,
+        price_in_cents: row.price_in_cents
+      }));
+      setProducts(fetchedProducts);
+    }
+
+    fetchData();
+  }, [])
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-3">
@@ -49,7 +75,7 @@ export default function DashProductsPage() {
 
         <tbody>
           {products.slice(0, 10).map((product) => (
-            <TableRow key={product.id}>
+            <TableRow key={product.product_id}>
               <TableCell className="size-4">
                 <input
                   type="checkbox"
@@ -63,10 +89,10 @@ export default function DashProductsPage() {
                 {product.name}
               </TableCell>
               <TableCell>
-                R$ {product.price}
+                {(product.price_in_cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
               </TableCell>
               <TableCell className="flex items-center justify-end gap-4">
-                <Link href={`/dash/products/${product.id}`} className="text-emerald-400">
+                <Link href={`/dash/products/${product.product_id}`} className="text-emerald-400">
                   <IconButton className="ml-auto" transparent>
                     <EllipsisIcon size={16} />
                   </IconButton>

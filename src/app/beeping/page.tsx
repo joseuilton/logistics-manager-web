@@ -1,18 +1,73 @@
-import { TrashIcon } from "lucide-react";
+"use client";
+import { CameraIcon, FileIcon, TrashIcon } from "lucide-react";
+import Quagga from "@ericblade/quagga2";
 import { IconButton } from "../components/IconButton";
 import { Table } from "../components/table/table";
 import { TableCell } from "../components/table/table-cell";
 import { TableHeading } from "../components/table/table-heading";
 import { TableRow } from "../components/table/table-row";
+import { useEffect, useState } from "react";
+
+interface Product {
+  product_id: number;
+  name: string;
+  price_in_cents: number;
+}
 
 export default function BeepingPage() {
+  const [currentCode, setCurrentCode] = useState<string>("");
+  const [cameraStatus, setCameraStatus] = useState<boolean>(false);
+  const [products, setProducts] = useState<Product[]>([]);
+
+  function handleInitScanner() {
+    Quagga.init({
+      inputStream: {
+        name: "Live",
+        type: "LiveStream",
+        target: document.querySelector("#scanner-container") as HTMLDivElement,
+      },
+      decoder: {
+        readers: ["ean_reader"],
+      },
+    }, (err) => {
+      if (err) {
+        console.error(err);
+        return;
+      }
+
+      Quagga.start();
+      setCameraStatus(true);
+      Quagga.onDetected((data) => {
+        setCurrentCode(data.codeResult.code!);
+        setCameraStatus(false);
+        Quagga.stop();
+      });
+    });
+  }
+
+  useEffect(() => {
+  }, [currentCode]);
+
   return (
     <div className="grid grid-cols-2 gap-16">
       <div>
-        <button className="block w-16 h-16 mx-auto rounded-full bg-emerald-400"></button>
+        <div className="flex gap-6 justify-center">
+          <button
+            // onClick={handleInitScanner}
+            className="flex justify-center items-center w-16 h-16 rounded-full bg-emerald-400"
+          >
+            <CameraIcon size={24} />
+          </button>
+          <button className="flex justify-center items-center w-16 h-16 rounded-full bg-emerald-400">
+            <FileIcon size={24} />
+          </button>
+        </div>
+        
         <h2 className="mt-6 text-center font-bold">
           Clique acima para bipar um código de barras
         </h2>
+
+        {cameraStatus && <div id="scanner-container"></div>}
       </div>
 
       <div>

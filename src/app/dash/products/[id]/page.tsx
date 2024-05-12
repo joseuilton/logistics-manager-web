@@ -9,8 +9,29 @@ import { ChevronLeftIcon, ChevronRightIcon, ChevronsLeftIcon, ChevronsRightIcon,
 import { itens } from "@/app/data/itens";
 import Link from "next/link";
 import Barcode from "react-barcode";
+import { useEffect, useState } from "react";
+import { api } from "@/app/lib/api";
 
-export default function DashProductItensPage() {
+interface Item {
+  item_id: string;
+  ean_code: string;
+}
+
+export default function DashProductItensPage({ params }: { params: { id: string } }) {
+  const [itens, setItens] = useState<Item[]>([]);
+
+  useEffect(() => {
+    async function fetchData() {
+      const product_id = params.id
+      const response = await api.get(`/products/${product_id}`);
+      console.log(response.data);
+      const fetchedItens = response.data.itens;
+      setItens(fetchedItens);
+    }
+
+    fetchData();
+  }, []);
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-3">
@@ -36,7 +57,7 @@ export default function DashProductItensPage() {
 
         <tbody>
           {itens.slice(0, 10).map((item) => (
-            <TableRow key={item.id}>
+            <TableRow key={item.item_id}>
               <TableCell className="size-4">
                 <input
                   type="checkbox"
@@ -48,9 +69,10 @@ export default function DashProductItensPage() {
               </TableCell>
               <TableCell>
                 <Barcode
-                  value={String(item.eanCode)}
+                  value={String(item.ean_code)}
                   displayValue={false}
                   height={50}
+                  format="EAN13"
                 />
               </TableCell>
               <TableCell className="flex items-center justify-end gap-4">

@@ -1,3 +1,5 @@
+"use client";
+
 import { ChevronLeftIcon, ChevronRightIcon, ChevronsLeftIcon, ChevronsRightIcon, EllipsisIcon, SearchIcon } from "lucide-react";
 
 import { IconButton } from "@/app/components/IconButton";
@@ -6,8 +8,38 @@ import { TableHeading } from "@/app/components/table/table-heading";
 import { TableCell } from "@/app/components/table/table-cell";
 import { TableRow } from "@/app/components/table/table-row";
 import { customers } from "../../data/customers";
+import { useEffect, useState } from "react";
+import { api } from "@/app/lib/api";
+
+interface Customer {
+  customerId: string;
+  name: string;
+  email: string;
+  phone: string;
+  cnpj: string;
+  address: string;
+}
 
 export function CustomersList() {
+  const [customers, setCustomers] = useState<Customer[]>([]);
+
+  useEffect(() => {
+    async function fetchData() {
+      const response = await api.get<Customer[]>("/customers");
+      const fetchedCustomers = response.data.map((row) => ({
+        customerId: row.customerId,
+        name: row.name,
+        email: row.email,
+        phone: row.phone,
+        cnpj: row.cnpj,
+        address: row.address,
+      }));
+
+      setCustomers(fetchedCustomers);
+    }
+
+    fetchData();
+  }, []);
 
   return (
     <div className="flex flex-col gap-4">
@@ -51,7 +83,7 @@ export function CustomersList() {
 
         <tbody>
           {customers.slice(0, 10).map((customer) => (
-            <TableRow key={customer.id}>
+            <TableRow key={customer.customerId}>
               <TableCell className="size-4">
                 <input
                   type="checkbox"
